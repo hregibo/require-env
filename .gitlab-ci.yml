@@ -1,0 +1,45 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: docker:git
+  when: manual
+  only:
+    - development
+    - master
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    IMAGE_TAG: $CI_REGISTRY_IMAGE/eve2twitch:build-$CI_COMMIT_SHORT_SHA
+    IMAGE_TAG_LATEST: $CI_REGISTRY_IMAGE/eve2twitch:latest
+  services:
+    - docker:dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build --cache-from $IMAGE_TAG_LATEST -t $IMAGE_TAG -t $IMAGE_TAG_LATEST .
+    - docker push $IMAGE_TAG
+    - docker push $IMAGE_TAG_LATEST
+
+production:
+  stage: deploy
+  environment:
+    name: production
+  when: manual
+  only:
+    - master
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE/eve2twitch:build-$CI_COMMIT_SHORT_SHA
+  script:
+    - mkdir -p ~/.ssh/
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - ssh $SSH_USERNAME@$SSH_HOST "
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+        docker pull $IMAGE_TAG &&
+        (docker rm -f $DOCKER_NAME_PRODUCTION || true) &&
+        docker run --restart unless-stopped -d --name $DOCKER_NAME_PRODUCTION --link eve2twitch-db -e CLIENT_NICK='$CLIENT_NICK' -e CLIENT_PASS='$CLIENT_PASS' -e DB_STRING='$DB_STRING_PRODUCTION' $IMAGE_TAG"
