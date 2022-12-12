@@ -17,5 +17,8 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "sourceRoot": "./src"
-  }
+  },
+  "exclude": [
+    "./src/**/*.spec.ts"
+  ]
 }
