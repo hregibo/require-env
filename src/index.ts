@@ -1,4 +1,4 @@
-export const expect_env = (keys: string | string[]): void => {
+export const require_env = (keys: string | string[]): void => {
   const missingEnvs = [];
   if (!Array.isArray(keys)) {
     keys = [keys];
@@ -16,3 +16,5 @@ export const expect_env = (keys: string | string[]): void => {
     );
   }
 };
+
+export default require_env;

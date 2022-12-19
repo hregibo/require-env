@@ -1,9 +1,9 @@
 {
-  "name": "require-env",
-  "version": "0.1.0",
+  "name": "@hregibo/require-env",
+  "version": "0.1.1",
   "description": "A simple tool to require mandatory environment variable in your Javascript/Typescript project",
-  "main": "index.js",
-  "types": "index.d.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.js",
   "scripts": {
     "test": "jest --coverage --passWithNoTests",
     "watch": "jest --coverage --watchAll --passWithNoTests",
